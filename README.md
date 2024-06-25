@@ -35,7 +35,7 @@ A simple telephone directory system written in C++ that allows users to add, vie
 
 ## Usage
 
-Follow the on-screen instructions to use the telephone directory system. The default password to access the system is `RPV`.
+Follow the on-screen instructions to use the telephone directory system. The default password to access the system is `ATP`.
 
 ## License
 
