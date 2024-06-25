@@ -1,0 +1,211 @@
+// TELEPHONE DIRECTORY SYSTEM
+
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <string>
+#include <cstdlib>
+#include <limits>
+
+class Contact {
+public:
+    std::string name;
+    std::string address;
+    unsigned int ph_no;
+
+    void get();
+    void show() const;
+    void modify();
+};
+
+void Contact::get() {
+    std::cout << "\nEnter name: ";
+    std::getline(std::cin, name);
+
+    std::cout << "Enter address: ";
+    std::getline(std::cin, address);
+
+    std::cout << "Enter phone number: ";
+    std::cin >> ph_no;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+void Contact::show() const {
+    std::cout << "\nName: " << name
+              << "\nAddress: " << address
+              << "\nPhone Number: " << ph_no << "\n";
+}
+
+void Contact::modify() {
+    get();
+}
+
+void addContact(std::fstream& file);
+void showContacts(std::fstream& file);
+void searchContact(std::fstream& file);
+void modifyContact(std::fstream& file);
+void deleteContact(std::fstream& file);
+void displayWelcomeMessage();
+
+int main() {
+    std::fstream file("directory.dat", std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
+
+    if (!file) {
+        std::cerr << "Error opening file.\n";
+        return 1;
+    }
+
+    const std::string password = "ATP";
+    std::string input_password;
+
+    displayWelcomeMessage();
+    std::cout << "Enter the password: ";
+    std::cin >> input_password;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    if (input_password != password) {
+        std::cerr << "Incorrect password.\n";
+        return 1;
+    }
+
+    while (true) {
+        std::cout << "\nTelephone Directory System\n";
+        std::cout << "1. Add Contact\n";
+        std::cout << "2. Show Contacts\n";
+        std::cout << "3. Search Contact\n";
+        std::cout << "4. Modify Contact\n";
+        std::cout << "5. Delete Contact\n";
+        std::cout << "6. Exit\n";
+        std::cout << "Enter your choice: ";
+
+        int choice;
+        std::cin >> choice;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        switch (choice) {
+        case 1:
+            addContact(file);
+            break;
+        case 2:
+            showContacts(file);
+            break;
+        case 3:
+            searchContact(file);
+            break;
+        case 4:
+            modifyContact(file);
+            break;
+        case 5:
+            deleteContact(file);
+            break;
+        case 6:
+            file.close();
+            return 0;
+        default:
+            std::cerr << "Invalid choice. Try again.\n";
+        }
+    }
+}
+
+void addContact(std::fstream& file) {
+    Contact contact;
+    contact.get();
+    file.clear();
+    file.seekp(0, std::ios::end);
+    file.write(reinterpret_cast<char*>(&contact), sizeof(contact));
+}
+
+void showContacts(std::fstream& file) {
+    file.clear();
+    file.seekg(0, std::ios::beg);
+    Contact contact;
+    while (file.read(reinterpret_cast<char*>(&contact), sizeof(contact))) {
+        contact.show();
+    }
+}
+
+void searchContact(std::fstream& file) {
+    std::string name;
+    std::cout << "Enter the name to search: ";
+    std::getline(std::cin, name);
+
+    file.clear();
+    file.seekg(0, std::ios::beg);
+    Contact contact;
+    bool found = false;
+    while (file.read(reinterpret_cast<char*>(&contact), sizeof(contact))) {
+        if (contact.name == name) {
+            contact.show();
+            found = true;
+        }
+    }
+    if (!found) {
+        std::cout << "No contact found with name " << name << ".\n";
+    }
+}
+
+void modifyContact(std::fstream& file) {
+    unsigned int ph_no;
+    std::cout << "Enter the phone number of the contact to modify: ";
+    std::cin >> ph_no;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    file.clear();
+    file.seekg(0, std::ios::beg);
+    Contact contact;
+    bool found = false;
+    std::fstream temp_file("temp.dat", std::ios::out | std::ios::binary);
+    while (file.read(reinterpret_cast<char*>(&contact), sizeof(contact))) {
+        if (contact.ph_no == ph_no) {
+            std::cout << "Current details:\n";
+            contact.show();
+            std::cout << "Enter new details:\n";
+            contact.modify();
+            found = true;
+        }
+        temp_file.write(reinterpret_cast<char*>(&contact), sizeof(contact));
+    }
+    file.close();
+    temp_file.close();
+    std::remove("directory.dat");
+    std::rename("temp.dat", "directory.dat");
+    file.open("directory.dat", std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
+    if (!found) {
+        std::cout << "No contact found with phone number " << ph_no << ".\n";
+    }
+}
+
+void deleteContact(std::fstream& file) {
+    std::string name;
+    std::cout << "Enter the name of the contact to delete: ";
+    std::getline(std::cin, name);
+
+    file.clear();
+    file.seekg(0, std::ios::beg);
+    Contact contact;
+    std::fstream temp_file("temp.dat", std::ios::out | std::ios::binary);
+    bool found = false;
+    while (file.read(reinterpret_cast<char*>(&contact), sizeof(contact))) {
+        if (contact.name == name) {
+            found = true;
+            continue;
+        }
+        temp_file.write(reinterpret_cast<char*>(&contact), sizeof(contact));
+    }
+    file.close();
+    temp_file.close();
+    std::remove("directory.dat");
+    std::rename("temp.dat", "directory.dat");
+    file.open("directory.dat", std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
+    if (!found) {
+        std::cout << "No contact found with name " << name << ".\n";
+    }
+}
+
+void displayWelcomeMessage() {
+    std::cout << "****************************\n";
+    std::cout << "*   WELCOME TO THE         *\n";
+    std::cout << "* TELEPHONE DIRECTORY      *\n";
+    std::cout << "*         SYSTEM           *\n";
+    std::cout << "****************************\n";
+}
