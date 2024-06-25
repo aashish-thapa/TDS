@@ -21,16 +21,16 @@ A simple telephone directory system written in C++ that allows users to add, vie
 
 1. Clone the repository
     ```sh
-    git clone https://github.com/aashish-thapa/telephone-directory-system.git
+    git clone https://github.com/aashish-thapa/TDS.git
     cd telephone-directory-system
     ```
 2. Compile the code
     ```sh
-    g++ main.cpp -o telephone-directory-system
+    g++ main.cpp -o TDS
     ```
 3. Run the executable
     ```sh
-    ./telephone-directory-system
+    ./TDS
     ```
 
 ## Usage
